@@ -3,7 +3,6 @@
 // File:    gpio.h
 // Authors: Luca Mazza
 
-
 #ifndef GPIO_H
 #define GPIO_H
 
@@ -15,6 +14,7 @@
 
 void rgb_pins_init(void);
 void btn_pins_init(void);
+void speaker_pins_init(void);
 void rgb_set_color(unsigned r, unsigned g, unsigned b);
 void rgb_clear();
 

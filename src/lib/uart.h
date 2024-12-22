@@ -6,6 +6,10 @@
 #ifndef UART_H
 #define UART_H
 
+extern char flag_rx;
+extern char strg[80];
+extern int  j;
+
 void  uart_init_pins(void);
 void  uart_init(int baud);
 void  uart_put_4(char c);

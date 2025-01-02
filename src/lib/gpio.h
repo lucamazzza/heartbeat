@@ -3,6 +3,8 @@
 // File:    gpio.h
 // Authors: Luca Mazza
 
+#include <p32xxxx.h>
+
 #ifndef GPIO_H
 #define GPIO_H
 

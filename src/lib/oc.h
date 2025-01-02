@@ -3,6 +3,8 @@
 // File:    oc.h
 // Authors: Luca Mazza
 
+#include <p32xxxx.h>
+
 #ifndef OC_H
 #define OC_H
 

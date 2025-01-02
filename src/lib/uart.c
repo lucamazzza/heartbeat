@@ -4,6 +4,11 @@
 // Authors: Luca Mazza
 
 #include "uart.h"
+#include "main.h"
+
+char flag_rx;
+char strg[80];
+int  j;
 
 void uart_init_pins(void) {
     TRISFbits.TRISF12 = 0; // U4TX output
@@ -54,7 +59,7 @@ char uart_get_4(void) {
 void uart_puts_4(char *sz_data) {
     char *p_data = sz_data;
     while (*p_data) {
-        put_u4((*(p_data)));
+        uart_put_4((*(p_data)));
     }
 }
 

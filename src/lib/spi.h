@@ -3,11 +3,13 @@
 // File:    spi.h
 // Authors: Luca Mazza
 
+#include <p32xxxx.h>
+
 #ifndef SPI_H
 #define SPI_H
 
-#define CS  LATFbits.LATF8;
-#define TCS TRISFbits.TRISF8;
+#define CS  LATFbits.LATF8
+#define TCS TRISFbits.TRISF8
 
 void init_spi1(void);
 void erase_flash(void);

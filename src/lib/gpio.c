@@ -15,7 +15,7 @@ void btn_pins_init(void) {
     TRISBbits.TRISB4 = 1; // BTNC input
 }
 
-void speaker_pin_inits(void) {
+void speaker_pins_init(void) {
     TRISBbits.TRISB14 = 0; // SPEAKER output
 }
 

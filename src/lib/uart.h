@@ -1,7 +1,9 @@
 // Universal Asynchronous Receiver/Transmitter
 //
 // File:    uart.h
-// Authors: Luca Mazza 
+// Authors: Luca Mazza
+
+#include <p32xxxx.h>
 
 #ifndef UART_H
 #define UART_H

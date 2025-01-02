@@ -3,6 +3,8 @@
 // File:    adc.h
 // Authors: Luca Mazza
 
+#include <p32xxxx.h>
+
 #ifndef ADC_H
 #define ADC_H
 

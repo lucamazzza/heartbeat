@@ -3,6 +3,8 @@
 // File:    ky39.h
 // Authors: Luca Mazza
 
+#include <p32xxxx.h>
+
 #ifndef KY39_H
 #define KY39_H
 

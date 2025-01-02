@@ -6,9 +6,9 @@
 #include "gpio.h"
 
 void rgb_pins_init(void) {
-    TRISDbits.TRISD2 = 0; // LED_R output
+    TRISDbits.TRISD2  = 0;// LED_R output
     TRISDbits.TRISD12 = 0;// LED_G output
-    TRISDbits.TRISD3 = 0; // LED_B output
+    TRISDbits.TRISD3  = 0;// LED_B output
 }
 
 void btn_pins_init(void) {

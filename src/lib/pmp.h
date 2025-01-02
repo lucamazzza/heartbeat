@@ -59,6 +59,6 @@ void lcd_init(void);
 char read_lcd(int addr);
 void write_lcd(int addr, char c);
 void puts_lcd(char *s);
-void set_cursor_lcd(unsigned dir, unsigned steps);
-
+void move_cursor_lcd(unsigned dir, unsigned steps);
+void scroll_text_lcd(const char *str, int t);
 #endif

@@ -38,7 +38,6 @@
 volatile int bpm            = 0;
 volatile int max_bpm        = 0;
 volatile int busy_measure   = 0;
-volatile int menu_scrolled  = 0;
 
 // END Global Variables ////////////////////////////////////////////////////////
 
@@ -48,17 +47,6 @@ volatile int menu_scrolled  = 0;
 void __attribute__((interrupt(ipl1), vector(19))) int4_btnc_interrupt() {
     // TODO: Implement
 }
-
-// BTND Interrupt Handler
-void __attribute__((interrupt(ipl2), vector(15))) int3_btnd_interrupt() {
-    // TODO: Implement
-}
-
-// BTNU Interrupt Handler
-void __attribute__((interrupt(ipl2), vector(9))) int2_btnu_interrupt() {
-    // TODO: Implement
-}
-
 
 // END ISR Routines ////////////////////////////////////////////////////////////
 
@@ -72,16 +60,10 @@ void start_monitoring(void) {
 
 void display_menu(void) {
     clr_lcd(); 
-    if (menu_scrolled == 0) {
-        puts_lcd("1 HeartBeat");
-        nl_lcd();
-    }
-    puts_lcd("2 Max BPM");
-    if (menu_scrolled) {
-        nl_lcd();
-        puts_lcd("3 Clear Readings");
-    }
-    sleep(10);
+    puts_lcd("Select...       ");
+    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 3);
+    nl_lcd();
+
 }
 
 void reset_max_bpm(void) {
@@ -96,6 +78,7 @@ int main(void) {
     // GPIO Initialization
     rgb_pins_init();
     btn_pins_init();
+    btn_interrupt_init();
     speaker_pins_init();
     
     // Timer Initialization
@@ -119,8 +102,10 @@ int main(void) {
     
     // KY-039 Initialization
 //    ky39_init();
-    
-    while(1) display_menu();
+    rgb_set_color(0, 1, 0);
+    while(1) {
+        display_menu();
+    }
     
 }
 

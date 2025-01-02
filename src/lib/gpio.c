@@ -6,13 +6,22 @@
 #include "gpio.h"
 
 void rgb_pins_init(void) {
-    TRISBbits.TRISB1 = 0; // LED_R output
-    TRISBbits.TRISB2 = 0; // LED_G output
-    TRISBbits.TRISB3 = 0; // LED_B output
+    TRISDbits.TRISD2 = 0; // LED_R output
+    TRISDbits.TRISD12 = 0;// LED_G output
+    TRISDbits.TRISD3 = 0; // LED_B output
 }
 
 void btn_pins_init(void) {
-    TRISBbits.TRISB4 = 1; // BTNC input
+    TRISFbits.TRISF0 = 1; // BTNC  input
+}
+
+void btn_interrupt_init(void) {
+    // Enable Interrupt INT4 (BTNC)
+    INT4R           = 4;
+    IPC4bits.INT4IP = 1;
+    IPC4bits.INT4IS = 2;
+    IFS0bits.INT4IF = 0;
+    IEC0bits.INT4IE = 1;
 }
 
 void speaker_pins_init(void) {
@@ -26,7 +35,5 @@ void rgb_set_color(unsigned r, unsigned g, unsigned b) {
 }
 
 void rgb_clear() {
-    LED_R = 0;
-    LED_G = 0;
-    LED_B = 0;
+    rgb_set_color(0, 0, 0);
 }

@@ -10,14 +10,19 @@ char flag_rx;
 char strg[80];
 int  j;
 
+char *get_strg(void) {
+    return strg;
+}
+
 void uart_init_pins(void) {
     TRISFbits.TRISF12 = 0; // U4TX output
-    TRISFbits.TRISF13 = 1; // U4RX input
     RPF12R            = 2; // U4TX on port RPF12
+    TRISFbits.TRISF13 = 1; // U4RX input
     U4RXR             = 9; // U4RX on port RPF13
 }
 
 void uart_init(int baud) {
+    unsigned int uart_brg;
     // REGSET
     U4MODEbits.ON       = 0;
     U4MODEbits.SIDL     = 0;
@@ -34,14 +39,17 @@ void uart_init(int baud) {
     U4MODEbits.STSEL    = 0;
     U4MODEbits.BRGH     = 0;
     // COMPUTE BRG
-    U4BRG = (int) (((float)PBCLK / (16 * baud) - 1) + 0.5);
+    uart_brg            = (int) (((float)PBCLK / (16 * baud) - 1) + 0.5);
+    U4BRG               = uart_brg;
     U4STAbits.UTXEN     = 1;
     U4STAbits.URXEN     = 1;
-    // UART Interrupt Flag
+    // UART RX Interrupt Flag
     IPC9bits.U4IP       = 6;
     IPC9bits.U4IS       = 3;
     IFS2bits.U4RXIF     = 0;
+    IFS2bits.U4TXIF     = 0;
     IEC2bits.U4RXIE     = 1;
+    IEC2bits.U4TXIE     = 0;
     // Enable UART
     U4MODEbits.ON       = 1;
 }
@@ -59,7 +67,7 @@ char uart_get_4(void) {
 void uart_puts_4(char *sz_data) {
     char *p_data = sz_data;
     while (*p_data) {
-        uart_put_4((*(p_data)));
+        uart_put_4((*(p_data++)));
     }
 }
 

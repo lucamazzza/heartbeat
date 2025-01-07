@@ -8,13 +8,21 @@
 #ifndef TIMER_H
 #define TIMER_H
 
+#define t2_start() {                            \
+    TMR2            = 0;                        \
+    T2CONbits.ON    = 1;                        \
+}
+#define t2_stop() {                             \
+    TMR2            = 0;                        \
+    T2CONbits.ON    = 0;                        \
+}
 #define t3_start() {                            \
     TMR3            = 0;                        \
     T3CONbits.ON    = 1;                        \
 }
 #define t3_stop() {                             \
-    TMR3         = 0;                           \
-    T3CONbits.ON = 0;                           \
+    TMR3            = 0;                        \
+    T3CONbits.ON    = 0;                        \
 }
 #define enable_interrupts()                     \
 {                                               \
@@ -23,7 +31,7 @@
     val |= 0x00800000;                          \
     asm volatile("mtc0 %0,$13" : "+r"(val));    \
     INTCONbits.MVEC = 1;                        \
-    _builtin_enable_interrupts();               \
+    __builtin_enable_interrupts();              \
 }
 
 void timer_init(void);

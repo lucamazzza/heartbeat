@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+int stop_lcd;
+
 void lcd_init() {
     ANSELE = 0x0000;        //RE0:7 as digital
     TRISE = 0x00FF;         // RE0:7 as digital input , or 0x0000 as out is the same
@@ -65,6 +67,7 @@ void scroll_text_lcd(const char *str, int t) {
     for (int start = 0; ; start++) {
         cmd_lcd(LCD_C_HOME);
         for (int j = 0; j < 16; j++) {
+            if (stop_lcd) return;
             int pos = (start + j) % (len + 16); // Loop text infinitely
             if (pos < len) {
                 buffer[j] = str[pos];

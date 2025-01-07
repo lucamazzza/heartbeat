@@ -36,39 +36,87 @@
 // START Global Variables //////////////////////////////////////////////////////
 
 volatile int bpm            = 0;
-volatile int max_bpm        = 0;
+volatile int max_bpm_m      = 0;
 volatile int busy_measure   = 0;
+
+extern char flag_rx;
+extern char strg[80];
+extern int  j;
+
+extern int  stop_lcd;
 
 // END Global Variables ////////////////////////////////////////////////////////
 
 // START ISR Routines //////////////////////////////////////////////////////////
+
+// Timer2 Interrupt Handler
+void __attribute__((interrupt(ipl1), vector(8))) timer2_interrupt() {
+    TMR2 = 0;
+    IFS0bits.T2IF = 0;
+}
 
 // BTNC Interrupt Handler
 void __attribute__((interrupt(ipl1), vector(19))) int4_btnc_interrupt() {
     // TODO: Implement
 }
 
+// UART Interrupt Handler
+void __attribute__((interrupt(ipl6), vector(39))) uart4_rx_interrupt() {
+    char c = U4RXREG;
+    strg[j++] = c;
+    if (j > 0 && (c == '\r' || c == '\n')) {
+        strg[j - 1] = 0;
+        j = 0;
+        flag_rx  = 1;
+        stop_lcd = 1;
+    }
+    IFS2bits.U4RXIF = 0;
+}
+
 // END ISR Routines ////////////////////////////////////////////////////////////
 
 // START Functions /////////////////////////////////////////////////////////////
 
-void start_monitoring(void) {
-    busy_measure = 1;
-    rgb_set_color(0, 1, 0);
-    beep(100);
-}
-
-void display_menu(void) {
+void start_menu(void) {
     clr_lcd(); 
     puts_lcd("Select...       ");
-    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 3);
+    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 20);
     nl_lcd();
 
 }
+void heart_beat(void) {
+    clr_lcd();
+    uart_puts_4("Recording Heart Beat...\r\n");
+    puts_lcd("Recording...   ");
+    nl_lcd();
+    puts_lcd("################");
+    busy_measure = 1;
+    rgb_set_color(0, 1, 0);
+    beep(10);
+    sleep(100);
+    clr_lcd();
+    home_lcd();
+    stop_lcd = 0;
+}
+
+void max_bpm(void) {
+    clr_lcd();
+    uart_puts_4("Max BPM: ");
+    puts_lcd("Max BPM: ");
+    clr_lcd();
+    home_lcd();
+    stop_lcd = 0;
+}
 
 void reset_max_bpm(void) {
-    max_bpm = 0;
+    clr_lcd();
+    uart_puts_4("Max BPM Reading Reset\r\n");
+    puts_lcd("Max BPM Reading Reset");
+    max_bpm_m = 0;
     erase_flash();
+    clr_lcd();
+    home_lcd();
+    stop_lcd = 0;
 }
 // END Functions ///////////////////////////////////////////////////////////////
 
@@ -103,10 +151,36 @@ int main(void) {
     // KY-039 Initialization
 //    ky39_init();
     rgb_set_color(0, 1, 0);
-    while(1) {
-        display_menu();
+    uart_puts_4("\033[2J\033[0;0HSelect...\r\n");
+    uart_puts_4("1. Heart Beat\r\n");
+    uart_puts_4("2. Max BPM\r\n");
+    uart_puts_4("3. Reset\r\n");
+    stop_lcd = 0;
+    while (1) {
+        char *hb = "1";
+        char *mb = "2";
+        char *rs = "3";        
+        start_menu();
+        if (flag_rx) {
+            char *str = get_strg();
+            if (strcmp(str, hb) == 0) {
+                heart_beat();
+            } else if (strcmp(str, mb) == 0) {
+                max_bpm();
+            } else if (strcmp(str, rs) == 0) {
+                reset_max_bpm();
+            } else {
+                clr_lcd();
+                home_lcd();
+                uart_puts_4("Invalid Selection\r\n");
+                puts_lcd("Invalid");
+                sleep(50);
+                clr_lcd();
+            }
+        }
+        flag_rx = 0;
+        sleep(20);
     }
-    
 }
 
 // MAIN ////////////////////////////////////////////////////////////////////////

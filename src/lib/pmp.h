@@ -61,4 +61,5 @@ void write_lcd(int addr, char c);
 void puts_lcd(char *s);
 void move_cursor_lcd(unsigned dir, unsigned steps);
 void scroll_text_lcd(const char *str, int t);
+
 #endif

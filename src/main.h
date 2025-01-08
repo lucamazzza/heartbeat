@@ -4,6 +4,7 @@
 // Authors: Luca Mazza 
 
 #include <p32xxxx.h>
+#include <stdio.h>
 
 #ifndef MAIN_H
 #define MAIN_H

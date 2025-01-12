@@ -9,11 +9,15 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define PBCLK       40000000
-#define PRESC       1/256
-#define HEART_BEAT  "1"
-#define MAX_BPM     "2"
-#define RESET       "3"
+#define PBCLK        40000000
+#define PRESC        1/256
+#define HEART_BEAT   "1"
+#define MAX_BPM      "2"
+#define RESET        "3"
+#define READ_BUFSIZE 10
+#define BPM_BUFSIZE  9
+#define BPM_BUF_MEDIAN (int)(BPM_BUFSIZE/2)
+
 
 #include <p32xxxx.h>
 #include <string.h>

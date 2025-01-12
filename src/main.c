@@ -35,9 +35,18 @@
 
 // START Global Variables //////////////////////////////////////////////////////
 
-volatile int bpm            = 0;
-volatile int max_bpm_m      = 0;
-volatile int busy_measure   = 0;
+volatile int   interrupt_cnt    = 0;
+volatile int   bpm              = 0;
+volatile int   bpm_temp         = 0;
+volatile int   max_bpm_m        = 0;
+volatile int   busy_measure     = 0;
+volatile float previous_lowpass = 0;
+volatile float reading_buf[READ_BUFSIZE];
+volatile float bpm_comp_buf[BPM_BUFSIZE];
+volatile int   bpm_buf_index    = 0;
+volatile int   read_buf_index   = 0;
+volatile float buf_sum          = 0.0;
+volatile float filtered_sig     = 0.0;
 
 extern char flag_rx;
 extern char strg[80];
@@ -51,6 +60,12 @@ extern int  stop_lcd;
 
 // Timer2 Interrupt Handler
 void __attribute__((interrupt(ipl1), vector(8))) timer2_interrupt() {
+    if(++interrupt_cnt == 40) {
+        bpm_temp *= 6;
+        bpm = bpm_temp;
+        bpm_temp = 0;
+        interrupt_cnt = 0;
+    }
     TMR2 = 0;
     IFS0bits.T2IF = 0;
 }
@@ -85,10 +100,11 @@ void start_menu(void) {
     uart_puts_4("2. Max BPM\r\n");
     uart_puts_4("3. Reset\r\n");
     puts_lcd("Select...       ");
-    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 20);
+    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 100);
     nl_lcd();
 
 }
+
 void heart_beat(void) {
     rgb_set_color(0, 0, 1);
     clr_lcd();
@@ -98,12 +114,38 @@ void heart_beat(void) {
     puts_lcd("################");
     busy_measure = 1;
     beep(10);
+    t3_start();
     while(busy_measure) {
         char str_bpm[10];
-        sprintf(str_bpm, "%d ", bpm);
-        bpm = ky39_read();
+        
+        int read = ky39_read();
+        float tmp = (0.1 * read) + ((1.0 - 0.1) * previous_lowpass);
+        previous_lowpass = tmp;
+        
+        buf_sum -= reading_buf[read_buf_index];
+        reading_buf[read_buf_index] = tmp;
+        buf_sum += reading_buf[read_buf_index];
+        read_buf_index = (read_buf_index + 1) % READ_BUFSIZE;
+        filtered_sig = buf_sum / READ_BUFSIZE;
+        bpm_comp_buf[bpm_buf_index++] = filtered_sig > 500 ? filtered_sig : 0;
+        if (bpm_buf_index == BPM_BUFSIZE) {
+            if (bpm_comp_buf[0] < bpm_comp_buf[BPM_BUF_MEDIAN] && bpm_comp_buf[BPM_BUF_MEDIAN] > bpm_comp_buf[BPM_BUFSIZE]) {
+                bpm_temp++;
+            }
+            bpm_buf_index = 0;
+        }
+        
+        sprintf(str_bpm, "%f\r\n", filtered_sig);
         uart_puts_4(str_bpm);
+        
+        char *ts_bpm_str;
+        sprintf(ts_bpm_str, "BPM: %11d", bpm);
+        clr_lcd();
+        puts_lcd(ts_bpm_str);
+        nl_lcd();
+        puts_lcd("################");
     }
+    t3_stop();
     clr_lcd();
     puts_lcd("Stopping...    ");
     nl_lcd();
@@ -180,6 +222,9 @@ int main(void) {
     // PMP Initialization
     lcd_init();
     
+    // KY-039 Initialization
+    ky39_init();
+    
     // ADC Initialization
     adc_init();
     
@@ -189,11 +234,9 @@ int main(void) {
     // SPI Initialization
     init_spi1();
     
-    // KY-039 Initialization
-    ky39_init();
-    
     rgb_set_color(0, 1, 0);
     stop_lcd = 0;
+    for (int i = 0; i < READ_BUFSIZE; i++) reading_buf[i] = 0.0;
     while (1) {
         char *hb = "1";
         char *mb = "2";

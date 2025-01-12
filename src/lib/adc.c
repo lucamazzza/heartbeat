@@ -7,9 +7,11 @@
 #include "timer.h"
 
 void adc_init(void) {
-    ANSELBbits.ANSB2  = 1;
+    AD1CON1           = 0;
     AD1CON1bits.ASAM  = 1;
-    AD1CHSbits.CH0SB  = 8;
+    AD1CON1bits.SSRC  = 2;
+    AD1CHS            = 0;
+    AD1CHSbits.CH0SA  = 8;
     AD1CSSL           = 0;
     AD1CSSLbits.CSSL8 = 1;
     AD1CON3           = 0;
@@ -19,7 +21,7 @@ void adc_init(void) {
 }
 
 int adc_measure(void) {
-    sleep(100);
+    sleep(10);
     AD1CON1CLR = 0x0002;    
     while(!(AD1CON1 & 0x0001));
     return ADC1BUF0;

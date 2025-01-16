@@ -12,7 +12,7 @@ void timer_init(void){
     T2CONbits.TCKPS = 0b111;    // or 0x7, select prescaler 256
     T2CONbits.TCS   = 0;        // select internal peripheral clock
     TMR2            = 0;        // Clear TMR2 register
-    PR2             = 1000;    // Set PR2 register - Calculated to have .5ms
+    PR2             = 156;    // Set PR2 register - Calculated to have 1ms
     enable_interrupts();
     IPC2bits.T2IP   = 1;
     IPC2bits.T2IS   = 0;

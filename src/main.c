@@ -35,18 +35,18 @@
 
 // START Global Variables //////////////////////////////////////////////////////
 
-volatile int   interrupt_cnt    = 0;
-volatile int   bpm              = 0;
-volatile int   bpm_temp         = 0;
-volatile int   max_bpm_m        = 0;
-volatile int   busy_measure     = 0;
-volatile float previous_lowpass = 0;
-volatile float reading_buf[READ_BUFSIZE];
-volatile float bpm_comp_buf[BPM_BUFSIZE];
-volatile int   bpm_buf_index    = 0;
-volatile int   read_buf_index   = 0;
-volatile float buf_sum          = 0.0;
-volatile float filtered_sig     = 0.0;
+volatile int      bpm              = 0;
+volatile int      bpm_temp         = 0;
+volatile unsigned max_bpm_m        = 0;
+volatile int      busy_measure     = 0;
+volatile float    previous_lowpass = 0;
+volatile float    reading_buf[READ_BUFSIZE];
+volatile int      read_buf_index   = 0;
+volatile float    buf_sum          = 0.0;
+volatile float    filtered_sig     = 0.0;
+
+float    readings[READINGS_LEN];
+int      cur_reading_idx;
 
 extern char flag_rx;
 extern char strg[80];
@@ -60,12 +60,6 @@ extern int  stop_lcd;
 
 // Timer2 Interrupt Handler
 void __attribute__((interrupt(ipl1), vector(8))) timer2_interrupt() {
-    if(++interrupt_cnt == 40) {
-        bpm_temp *= 6;
-        bpm = bpm_temp;
-        bpm_temp = 0;
-        interrupt_cnt = 0;
-    }
     TMR2 = 0;
     IFS0bits.T2IF = 0;
 }
@@ -100,9 +94,19 @@ void start_menu(void) {
     uart_puts_4("2. Max BPM\r\n");
     uart_puts_4("3. Reset\r\n");
     puts_lcd("Select...       ");
-    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 100);
+    scroll_text_lcd(" 1. HeartBeat - 2. Max BPM - 3. Reset ", 1000);
     nl_lcd();
+}
 
+int current_bpm(float data[READINGS_LEN]){
+    int cnt = 0;
+    for (int i = 50; i < READINGS_LEN - 50; i++) {
+        if (data[i] > data[i - 50] && data[i] < data[i + 50]) {
+            cnt++;
+            i += 50;
+        }
+    }
+    return cnt * 6;
 }
 
 void heart_beat(void) {
@@ -117,8 +121,8 @@ void heart_beat(void) {
     t3_start();
     while(busy_measure) {
         char str_bpm[10];
-        
         int read = ky39_read();
+        
         float tmp = (0.1 * read) + ((1.0 - 0.1) * previous_lowpass);
         previous_lowpass = tmp;
         
@@ -127,14 +131,14 @@ void heart_beat(void) {
         buf_sum += reading_buf[read_buf_index];
         read_buf_index = (read_buf_index + 1) % READ_BUFSIZE;
         filtered_sig = buf_sum / READ_BUFSIZE;
-        bpm_comp_buf[bpm_buf_index++] = filtered_sig > 500 ? filtered_sig : 0;
-        if (bpm_buf_index == BPM_BUFSIZE) {
-            if (bpm_comp_buf[0] < bpm_comp_buf[BPM_BUF_MEDIAN] && bpm_comp_buf[BPM_BUF_MEDIAN] > bpm_comp_buf[BPM_BUFSIZE]) {
-                bpm_temp++;
-            }
-            bpm_buf_index = 0;
-        }
         
+        if (cur_reading_idx < READINGS_LEN) 
+            readings[cur_reading_idx++] = filtered_sig;
+        else {
+            bpm = current_bpm(readings);
+            cur_reading_idx = 0;
+        }
+
         sprintf(str_bpm, "%f\r\n", filtered_sig);
         uart_puts_4(str_bpm);
         
@@ -144,13 +148,16 @@ void heart_beat(void) {
         puts_lcd(ts_bpm_str);
         nl_lcd();
         puts_lcd("################");
+        if (max_bpm_m < bpm) max_bpm_m = bpm;
+        
     }
+    write_flash(MAX_BPM_FADDR, max_bpm_m);
     t3_stop();
     clr_lcd();
     puts_lcd("Stopping...    ");
     nl_lcd();
     puts_lcd("################");
-    sleep(10);
+    sleep(1000);
     clr_lcd();
     home_lcd();
     stop_lcd = 0;
@@ -159,12 +166,19 @@ void heart_beat(void) {
 
 void max_bpm(void) {
     rgb_set_color(0, 0, 1);
-    clr_lcd();
-    uart_puts_4("Max BPM: \r\n");
-    puts_lcd("Max BPM: ...    ");
-    nl_lcd();
-    puts_lcd("################");
-    sleep(100);
+    int max_bpm = read_flash(MAX_BPM_FADDR);
+    char str_bpm[16];
+    
+    if (max_bpm == 255) sprintf(str_bpm, "Max BPM:      --");
+    else sprintf(str_bpm, "Max BPM: %7d", max_bpm);
+    busy_measure = 1;
+    while (busy_measure) {
+        clr_lcd();
+        puts_lcd(str_bpm);
+        nl_lcd();
+        puts_lcd("################");
+        sleep(1000);
+    }
     clr_lcd();
     home_lcd();
     stop_lcd = 0;
@@ -181,7 +195,7 @@ void reset_max_bpm(void) {
     puts_lcd("################");
     max_bpm_m = 0;
     erase_flash();
-    sleep(100);
+    sleep(2000);
     clr_lcd();
     home_lcd();
     stop_lcd = 0;
@@ -196,7 +210,7 @@ void invalid(void) {
     puts_lcd("Invalid...      ");
     nl_lcd();
     puts_lcd("################");
-    sleep(50);
+    sleep(2000);
     clr_lcd();
     stop_lcd = 0;
     rgb_set_color(0, 1, 0);

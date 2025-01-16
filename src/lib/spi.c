@@ -36,7 +36,7 @@ void erase_flash(void) {
 }
 
 // send one byte of data and receive one back at the same time
-int write_spi1( int i) {
+int write_spi1(int i) {
     while(!SPI1STATbits.SPITBE);	// wait for TX buffer to be empty
     SPI1BUF = i;                    // write to buffer for TX
     while( !SPI1STATbits.SPIRBF);   // wait for transfer complete

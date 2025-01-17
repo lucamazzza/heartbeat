@@ -215,7 +215,6 @@ void max_bpm(void) {
     home_lcd();
     stop_lcd = 0;
     rgb_set_color(0, 1, 0);
-
 }
 
 // Sends the flash memory the command to clear the whole memory.

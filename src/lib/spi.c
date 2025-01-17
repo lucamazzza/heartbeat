@@ -29,10 +29,10 @@ void erase_flash(void) {
     write_spi1(0x60);
     CS = 1;
     sleep(10);
-    // write disable
-    CS = 0;
-    write_spi1(0x04);
-    CS = 1;
+//    // write disable
+//    CS = 0;
+//    write_spi1(0x04);
+//    CS = 1;
 }
 
 // send one byte of data and receive one back at the same time

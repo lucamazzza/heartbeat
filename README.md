@@ -11,4 +11,4 @@
 </p>
 
 > [!IMPORTANT]
-> Readme under construction
+> Readme under construction. For now this is something that has to do with embedded software engineering :)
